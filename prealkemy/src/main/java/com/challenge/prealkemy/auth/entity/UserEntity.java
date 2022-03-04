@@ -3,14 +3,12 @@ package com.challenge.prealkemy.auth.entity;
 
 import java.util.Collection;
 import java.util.Collections;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.Size;
-
+import javax.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -19,15 +17,24 @@ import org.springframework.security.core.userdetails.UserDetails;
  * @author river
  */
 @Entity
+@Setter
+@Getter
 @Table(name = "Usuario")
 public class UserEntity implements UserDetails{
+    
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+    @GeneratedValue(generator = "uuid")
+    @GenericGenerator(name = "uuid", strategy = "uuid2")
+    @Column(unique = true)
+    private String id;
+
     @Email
+    @Column(unique = true)
     private String username;
+
     @Size(min = 8)
     private String password;
+
     private boolean accountNonExpired;
     private boolean accountNonLocked;
     private boolean credentialsNonExpired;
@@ -39,12 +46,12 @@ public class UserEntity implements UserDetails{
         this.credentialsNonExpired = true;
         this.enabled = true;
     }
-    
-    public Long getId() {
+
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -90,5 +97,4 @@ public class UserEntity implements UserDetails{
     public boolean isEnabled() {
         return enabled;
     }
-
 }

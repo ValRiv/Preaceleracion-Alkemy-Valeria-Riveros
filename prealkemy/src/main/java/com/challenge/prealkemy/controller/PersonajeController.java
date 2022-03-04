@@ -1,5 +1,6 @@
 package com.challenge.prealkemy.controller;
 
+import com.challenge.prealkemy.dto.PeliculaDTO;
 import com.challenge.prealkemy.dto.PersonajeDTO;
 import com.challenge.prealkemy.dto.PersonajeDTOBasic;
 import com.challenge.prealkemy.service.PersonajeService;
@@ -31,17 +32,25 @@ public class PersonajeController {
     @Autowired
     private PersonajeService personajeService;
 
+    @GetMapping("/{idPersonaje}")
+    public ResponseEntity<PersonajeDTO> getPersonajeById(@PathVariable String idPersonaje) {
+        PersonajeDTO personajeDTO = personajeService.getPersonajeById(idPersonaje);
+        return ResponseEntity.ok(personajeDTO);
+    }
+//    @GetMapping("/filters")
+
     @GetMapping
-    public ResponseEntity<List<PersonajeDTOBasic>> getAllPersonajeBasic() {
-        List<PersonajeDTOBasic> personajeBasicList = personajeService.getAllPersonajeBasic();
-        return ResponseEntity.ok().body(personajeBasicList);
+    public ResponseEntity<List<PersonajeDTO>> getPersonajeByFilters(
+            
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Integer edad,
+            @RequestParam(required = false) List<String> peliculas,
+            @RequestParam(required = false, defaultValue = "ASC") String order) {
+
+        List<PersonajeDTO> personajeDTOList = personajeService.getPersonajeByFilters(nombre, edad, peliculas, order);
+        return ResponseEntity.ok(personajeDTOList);
     }
 
-    /*
-    4. Creación, Edición y Eliminación de Personajes (CRUD)
-        Deberán existir las operaciones básicas de creación, edición y eliminación de personajes.
-     */
-    //
     @PostMapping
     public ResponseEntity<PersonajeDTO> savePersonaje(@RequestBody PersonajeDTO personajeDTO) {
         PersonajeDTO savedPersonaje = personajeService.savePersonaje(personajeDTO);
@@ -50,33 +59,15 @@ public class PersonajeController {
 
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<PersonajeDTO> modifyPersonaje(@PathVariable String idPersonaje, @RequestBody PersonajeDTO perDTO) {
-        PersonajeDTO updatedpersonaje = personajeService.modifyPersonaje(idPersonaje, perDTO);
-        return ResponseEntity.ok(updatedpersonaje);
+    @PutMapping("/{idPersonaje}")
+    public ResponseEntity<PersonajeDTO> modifyPersonaje(@PathVariable String idPersonaje, @RequestBody PersonajeDTO personajeDTO) {
+        PersonajeDTO modificarpersonaje = personajeService.modifyPersonaje(idPersonaje, personajeDTO);
+        return ResponseEntity.ok(modificarpersonaje);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<PersonajeDTO> deletePersonaje(@PathVariable String idPersonaje) {
+    @DeleteMapping("/{idPersonaje}")
+    public ResponseEntity<Void> deletePersonaje(@PathVariable String idPersonaje) {
         personajeService.deletePersonaje(idPersonaje);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<PersonajeDTO> getPersonajeDetailById(@PathVariable String idPersonaje) {
-        PersonajeDTO personajeDTO = personajeService.getPersonajeById(idPersonaje);
-        return ResponseEntity.ok(personajeDTO);
-    }
-
-    @GetMapping("/filters")
-    public ResponseEntity<List<PersonajeDTO>> getPersonajeByFilters(
-            @RequestParam(required = false) String nombre,
-            @RequestParam(required = false) Integer edad,
-            @RequestParam(required = false) Double peso,
-            @RequestParam(required = false) List<String> peliculas,
-            @RequestParam(required = false, defaultValue = "ASC") String order) {
-
-        List<PersonajeDTO> personajeDTOList = personajeService.getPersonajeByFilters(nombre, edad, peso, peliculas, order);
-        return ResponseEntity.ok(personajeDTOList);
     }
 }

@@ -8,7 +8,7 @@ import com.challenge.prealkemy.entity.GeneroEntity;
 import com.challenge.prealkemy.entity.PeliculaEntity;
 import com.challenge.prealkemy.entity.PersonajeEntity;
 import com.challenge.prealkemy.exception.PeliculaException;
-import com.challenge.prealkemy.exceptionsMensaje.ExceptionsMensaje;
+import com.challenge.prealkemy.exceptionsMensaje.ExceptionMensaje;
 import com.challenge.prealkemy.validaciones.ValidacionesDTO;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -53,7 +53,7 @@ public class PeliculaMapper {
             return peliculaDTO;
 
         } else {
-            throw new PeliculaException(ExceptionsMensaje.ENTITY_WRONG_DATA);
+            throw new PeliculaException(ExceptionMensaje.ENTITY_NO_ENCONTRADA);
         }
     }
 
@@ -65,7 +65,7 @@ public class PeliculaMapper {
             return peliculaDTOBasic;
 
         } else {
-            throw new PeliculaException(ExceptionsMensaje.ENTITY_WRONG_DATA);
+            throw new PeliculaException(ExceptionMensaje.ENTITY_NO_ENCONTRADA);
         }
     }
 

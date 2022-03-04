@@ -1,10 +1,12 @@
-
 package com.challenge.prealkemy.auth.service;
 
 import com.challenge.prealkemy.auth.dto.UserDTO;
 import com.challenge.prealkemy.auth.entity.UserEntity;
 import com.challenge.prealkemy.auth.repository.UserRepository;
+import com.challenge.prealkemy.exception.RegisterException;
+import com.challenge.prealkemy.exceptionsMensaje.ExceptionMensaje;
 import com.challenge.prealkemy.service.EmailService;
+import java.io.IOException;
 import java.util.Collections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
@@ -20,40 +22,39 @@ import org.springframework.stereotype.Service;
  */
 @Service
 
-public class UserDetailsCustomService implements UserDetailsService{
+public class UserDetailsCustomService implements UserDetailsService {
+
     @Autowired
     private UserRepository userRepository;
     @Autowired
     private EmailService emailService;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
+
         UserEntity userEntity = userRepository.findByUsername(userName);
         if (userEntity == null) {
-            throw new UsernameNotFoundException("Usuario y contraseña NO encontrado");
+            throw new RegisterException(ExceptionMensaje.USUARIO_Y_CONTRASEÑA_NO_VALIDOS);
         }
-        return User.withUsername(userEntity.getUsername())
-                .password(userEntity.getPassword())
-                .authorities(Collections.emptyList())
-                .build();
+        return new User(userEntity.getUsername(), userEntity.getPassword(), Collections.emptyList());
+
     }
 
-    public boolean save(UserDTO userDTO) {
+    public void register(UserDTO userDTO) throws IOException {
+
         UserEntity userEntity = new UserEntity();
         userEntity.setUsername(userDTO.getUsername());
         userEntity.setPassword(userDTO.getPassword());
-        String password = passwordEncoder.encode(userDTO.getPassword());
-        userEntity.setPassword(password);
-        userEntity = this.userRepository.save(userEntity);
-        if (userEntity != null) {
+
+        if (userRepository.findByUsername(userEntity.getUsername()) == null) {
+
+            userEntity = userRepository.save(userEntity);
             emailService.sendWelcomeEmailTo(userEntity.getUsername());
+
+        } else {
+            throw new RegisterException(ExceptionMensaje.USUARIO_YA_EXISTE);
+
         }
-        return userEntity != null;
+
     }
-
-
 }
-
-

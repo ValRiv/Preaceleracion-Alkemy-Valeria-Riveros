@@ -96,12 +96,12 @@ public class PeliculaController {
     
     @GetMapping("/filters")
     public ResponseEntity<List<PeliculaDTO>> getByFilters(
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) List<String> personajes,
+            @RequestParam(required = false) String titulo,
+           
             @RequestParam(required = false) List<String> generos,
             @RequestParam(required = false, defaultValue = "ASC") String order
     ) {
-        List<PeliculaDTO> filteredPeliculas = peliculaService.getPeliculaByFilters(title, personajes, generos, order);
+        List<PeliculaDTO> filteredPeliculas = peliculaService.getPeliculaByFilters(titulo, generos, order);
         return ResponseEntity.status(HttpStatus.OK).body(filteredPeliculas);
     }
 }

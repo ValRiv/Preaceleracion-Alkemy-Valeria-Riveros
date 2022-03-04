@@ -5,7 +5,7 @@ import com.challenge.prealkemy.dto.GeneroDTO;
 import com.challenge.prealkemy.dto.GeneroDTOBasic;
 import com.challenge.prealkemy.entity.GeneroEntity;
 import com.challenge.prealkemy.exception.GeneroException;
-import com.challenge.prealkemy.exceptionsMensaje.ExceptionsMensaje;
+import com.challenge.prealkemy.exceptionsMensaje.ExceptionMensaje;
 import com.challenge.prealkemy.mapper.GeneroMapper;
 import com.challenge.prealkemy.repository.GeneroRepository;
 import com.challenge.prealkemy.service.GeneroService;
@@ -45,7 +45,7 @@ public class GeneroServiceImpl implements GeneroService{
             return generoSavedDTO;
 
         } else {
-            throw new GeneroException(ExceptionsMensaje.DTO_WRONG_DATA);
+            throw new GeneroException(ExceptionMensaje.DTO_No_Valido);
         }
     }
     
@@ -81,10 +81,10 @@ public class GeneroServiceImpl implements GeneroService{
                 return modifyGeneroDTO;
 
             } else {
-                throw new GeneroException(ExceptionsMensaje.DTO_WRONG_DATA);
+                throw new GeneroException(ExceptionMensaje.DTO_No_Valido);
             }
         } else {
-            throw new GeneroException(ExceptionsMensaje.GENERO_NO_ENCONTRADO);
+            throw new GeneroException(ExceptionMensaje.GENERO_NO_ENCONTRADO);
         }
     }
    
@@ -94,7 +94,7 @@ public class GeneroServiceImpl implements GeneroService{
         if (generoRepository.existsById(id)) {
             generoRepository.deleteById(id);
         } else {
-            throw new GeneroException(ExceptionsMensaje.GENERO_NO_ENCONTRADO);
+            throw new GeneroException(ExceptionMensaje.GENERO_NO_ENCONTRADO);
         }
     }
 
@@ -103,7 +103,7 @@ public class GeneroServiceImpl implements GeneroService{
     public GeneroEntity getGeneroById(String id) {
         Optional<GeneroEntity> generoEntity = generoRepository.findById(id);
         if (!generoEntity.isPresent()) {
-            throw new GeneroException(ExceptionsMensaje.GENERO_NO_ENCONTRADO);
+            throw new GeneroException(ExceptionMensaje.GENERO_NO_ENCONTRADO);
         }
 
         return generoEntity.get();

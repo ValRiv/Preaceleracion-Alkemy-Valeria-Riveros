@@ -24,7 +24,7 @@ public interface PeliculaService {
 
     List<PeliculaDTO> getAllPeliculas();
 
-    List<PeliculaDTO> getPeliculaByFilters(String titulo, List<String> personajes, List<String> genero, String order);
+    List<PeliculaDTO> getPeliculaByFilters(String titulo, List<String> genero, String order);
 
     PeliculaDTO getPeliculaById(String id);
 

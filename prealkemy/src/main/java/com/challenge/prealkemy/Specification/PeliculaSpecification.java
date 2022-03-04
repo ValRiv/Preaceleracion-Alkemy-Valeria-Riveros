@@ -16,6 +16,7 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -23,14 +24,13 @@ import org.springframework.util.StringUtils;
  *
  * @author river
  */
+@Component
 public class PeliculaSpecification {
-    
+
     public Specification<PeliculaEntity> getFiltered(PeliculaDTOFilter peliculaFilters) {
 
-        
         return (root, query, criteriaBuilder) -> {
 
-           
             List<Predicate> predicates = new ArrayList<>();
             if (StringUtils.hasLength(peliculaFilters.getTitulo())) {
                 predicates.add(
@@ -41,24 +41,14 @@ public class PeliculaSpecification {
                 );
             }
 
-          
-            if (!CollectionUtils.isEmpty(peliculaFilters.getPersonajes())) {
-                Join<PeliculaEntity, PersonajeEntity> join = root.join("peliculaPersonajes", JoinType.INNER);
-                Expression<String> personajesId = join.get("id");
-                predicates.add(personajesId.in(peliculaFilters.getPersonajes()));
-            }
-            
-          
             if (!CollectionUtils.isEmpty(peliculaFilters.getGeneros())) {
                 Join<PeliculaEntity, GeneroEntity> join = root.join("peliculaGeneros", JoinType.INNER);
                 Expression<String> generosId = join.get("id");
                 predicates.add(generosId.in(peliculaFilters.getGeneros()));
             }
 
-      
             query.distinct(true);
 
-       
             String orderByField = "titulo";
             query.orderBy(
                     peliculaFilters.isASC()
@@ -66,10 +56,7 @@ public class PeliculaSpecification {
                     : criteriaBuilder.desc(root.get(orderByField))
             );
 
-          
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
 }
-
-

@@ -7,8 +7,10 @@ import com.challenge.prealkemy.dto.PeliculaDTOFilter;
 import com.challenge.prealkemy.entity.GeneroEntity;
 import com.challenge.prealkemy.entity.PeliculaEntity;
 import com.challenge.prealkemy.entity.PersonajeEntity;
+import com.challenge.prealkemy.exception.GeneroException;
 import com.challenge.prealkemy.exception.PeliculaException;
-import com.challenge.prealkemy.exceptionsMensaje.ExceptionsMensaje;
+import com.challenge.prealkemy.exception.PersonajeException;
+import com.challenge.prealkemy.exceptionsMensaje.ExceptionMensaje;
 import com.challenge.prealkemy.mapper.PeliculaMapper;
 import com.challenge.prealkemy.repository.GeneroRepository;
 import com.challenge.prealkemy.repository.PeliculaRepository;
@@ -52,46 +54,38 @@ public class PeliculaServiceImpl implements PeliculaService {
 
     @Override
     public PeliculaDTO savePelicula(PeliculaDTO peliculaDTO) {
+        try {
 
-        
             PeliculaEntity peliculaEntity = peliculaMapper.peliculaDTO2Entity(peliculaDTO, false);
             PeliculaEntity savedPelicula = peliculaRepository.save(peliculaEntity);
             PeliculaDTO savedPeliculaDTO = peliculaMapper.peliculaEntity2DTO(savedPelicula, false);
 
             return savedPeliculaDTO;
-        
+        } catch (PeliculaException exception) {
+            throw new PeliculaException(ExceptionMensaje.DTO_No_Valido);
+        }
     }
 
     @Override
     public PeliculaDTO modifyPelicula(String idPelicula, PeliculaDTO peliculaDTO) {
 
-        if (peliculaRepository.existsById(idPelicula)) {
-            if (validacionesDTO.peliculaDTOValido(peliculaDTO)) {
+        try {
 
-                PeliculaEntity savedPelicula = peliculaRepository.getById(idPelicula);
+            PeliculaEntity PeliculaGuardada = peliculaRepository.getById(idPelicula);
 
-                savedPelicula.setImagen(peliculaDTO.getImagen());
-                savedPelicula.setTitulo(peliculaDTO.getTitulo());
+            peliculaMapper.peliculaEntityRefreshValues(PeliculaGuardada, peliculaDTO);
 
-                String date = peliculaDTO.getFechaDeCreacion();
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-                LocalDate transformedDate = LocalDate.parse(date, formatter);
+            PeliculaEntity peliculaModificada = peliculaRepository.save(PeliculaGuardada);
 
-                savedPelicula.setFechaDeCreacion(transformedDate);
+            PeliculaDTO peliculaDTOModificada = peliculaMapper.peliculaEntity2DTO(peliculaModificada, false);
 
-                savedPelicula.setCalificacion(peliculaDTO.getCalificacion());
+            return peliculaDTOModificada;
 
-                PeliculaEntity modifiedPeliculaEntity = peliculaRepository.save(savedPelicula);
+        } catch (PeliculaException exception) {
+            throw new PeliculaException(ExceptionMensaje.PELICULA_NO_ENCONTRADA);
+        } catch (Exception exception) {
+            throw new PersonajeException(ExceptionMensaje.DTO_No_Valido);
 
-                PeliculaDTO modifiedPeliculaDTO = peliculaMapper.peliculaEntity2DTO(modifiedPeliculaEntity, false);
-
-                return modifiedPeliculaDTO;
-
-            } else {
-                throw new PeliculaException(ExceptionsMensaje.DTO_WRONG_DATA);
-            }
-        } else {
-            throw new PeliculaException(ExceptionsMensaje.PELICULA_NO_ENCONTRADA);
         }
     }
 
@@ -101,7 +95,7 @@ public class PeliculaServiceImpl implements PeliculaService {
         if (peliculaRepository.existsById(idPelicula)) {
             peliculaRepository.deleteById(idPelicula);
         } else {
-            throw new PeliculaException(ExceptionsMensaje.PELICULA_NO_ENCONTRADA);
+            throw new PeliculaException(ExceptionMensaje.PELICULA_NO_ENCONTRADA);
         }
     }
 
@@ -124,21 +118,13 @@ public class PeliculaServiceImpl implements PeliculaService {
     }
 
     @Override
-    public List<PeliculaDTO> getPeliculaByFilters(String titulo, List<String> personajes, List<String> genero, String order) {
+    public List<PeliculaDTO> getPeliculaByFilters(String titulo, List<String> generos, String order) {
 
-        if (titulo.isEmpty() || titulo == null && personajes.isEmpty() || personajes == null
-                && genero.isEmpty() || genero == null && order.isEmpty() || order == null) {
+        PeliculaDTOFilter peliculaDTOFilters = new PeliculaDTOFilter(titulo, generos, order);
+        List<PeliculaEntity> peliculaEntityList = peliculaRepository.findAll(peliculaSpecification.getFiltered(peliculaDTOFilters));
+        List<PeliculaDTO> peliculaDTOList = peliculaMapper.peliculaEntityList2DTOList(peliculaEntityList, true);
 
-            return getAllPeliculas();
-
-        } else {
-
-            PeliculaDTOFilter peliculaDTOFilters = new PeliculaDTOFilter(titulo, personajes, genero, order);
-            List<PeliculaEntity> peliculaEntityList = peliculaRepository.findAll(peliculaSpecification.getFiltered(peliculaDTOFilters));
-            List<PeliculaDTO> peliculaDTOList = peliculaMapper.peliculaEntityList2DTOList(peliculaEntityList, true);
-
-            return peliculaDTOList;
-        }
+        return peliculaDTOList;
     }
 
     @Override
@@ -149,26 +135,28 @@ public class PeliculaServiceImpl implements PeliculaService {
             PeliculaDTO peliculaDTO = peliculaMapper.peliculaEntity2DTO(peliculaEntity, true);
             return peliculaDTO;
         } else {
-            throw new PeliculaException(ExceptionsMensaje.PELICULA_NO_ENCONTRADA);
+            throw new PeliculaException(ExceptionMensaje.PELICULA_NO_ENCONTRADA);
         }
     }
 
     @Override
     public void addPersonajeDePelicula(String idPersonaje, String idPelicula) {
 
-        if (personajeRepository.existsById(idPersonaje) && peliculaRepository.existsById(idPelicula)) {
-            PeliculaEntity pelicula = peliculaRepository.getById(idPelicula);
-            PersonajeEntity personaje = personajeRepository.getById(idPersonaje);
-            List<PersonajeEntity> personajes = pelicula.getPersonajes();
-            personajes.add(personaje);
-            pelicula.setPersonajes(personajes);
-            peliculaRepository.save(pelicula);
+        try {
+            PeliculaEntity peliculaEntity = peliculaRepository.getById(idPelicula);
+            PersonajeEntity personajeEntity = personajeRepository.getById(idPersonaje);
 
-        } else if (!personajeRepository.existsById(idPersonaje)) {
-            throw new EntityNotFoundException(ExceptionsMensaje.PERSONAJE_NO_ENCONTRADO);
+            List<PersonajeEntity> personajes = peliculaEntity.getPersonajes();
 
-        } else if (!peliculaRepository.existsById(idPelicula)) {
-            throw new EntityNotFoundException(ExceptionsMensaje.PELICULA_NO_ENCONTRADA);
+            personajes.add(personajeEntity);
+            peliculaEntity.setPersonajes(personajes);
+            peliculaRepository.save(peliculaEntity);
+
+        } catch (PeliculaException exception) {
+            throw new PeliculaException(ExceptionMensaje.PELICULA_NO_ENCONTRADA);
+
+        } catch (PersonajeException exception) {
+            throw new PersonajeException(ExceptionMensaje.PERSONAJE_NO_ENCONTRADO);
         }
     }
 
@@ -176,58 +164,70 @@ public class PeliculaServiceImpl implements PeliculaService {
     @Override
     public void removePersonajeDePelicula(String idPersonaje, String idPelicula) {
 
-        if (personajeRepository.existsById(idPersonaje) && peliculaRepository.existsById(idPelicula)) {
-            PeliculaEntity pelicula = peliculaRepository.getById(idPelicula);
-            PersonajeEntity character = personajeRepository.getById(idPersonaje);
-            List<PersonajeEntity> personajes = pelicula.getPersonajes();
-            personajes.remove(personajes);
-            pelicula.setPersonajes(personajes);
-            peliculaRepository.save(pelicula);
+         try {
 
-        } else if (!personajeRepository.existsById(idPersonaje)) {
-            throw new EntityNotFoundException(ExceptionsMensaje.PERSONAJE_NO_ENCONTRADO);
+            PeliculaEntity peliculaEntity = peliculaRepository.getById(idPelicula);
+            PersonajeEntity personajeEntity = personajeRepository.getById(idPersonaje);
 
-        } else if (!peliculaRepository.existsById(idPelicula)) {
-            throw new EntityNotFoundException(ExceptionsMensaje.PELICULA_NO_ENCONTRADA);
+            List<PersonajeEntity> personajes = peliculaEntity.getPersonajes();
+
+            personajes.remove(personajeEntity);
+            peliculaEntity.setPersonajes(personajes);
+            peliculaRepository.save(peliculaEntity);
+
+        } catch (PeliculaException exception) {
+            throw new PeliculaException(ExceptionMensaje.PELICULA_NO_ENCONTRADA);
+
+        } catch (PersonajeException exc) {
+            throw new PersonajeException(ExceptionMensaje.PERSONAJE_NO_ENCONTRADO);
         }
+
     }
+    
 
     @Override
     public void addGeneroDePelicula(String idGenero, String idPelicula) {
+ try {
 
-        if (generoRepository.existsById(idGenero) && peliculaRepository.existsById(idPelicula)) {
-            PeliculaEntity pelicula = peliculaRepository.getById(idPelicula);
-            GeneroEntity genero = generoRepository.getById(idGenero);
-            List<GeneroEntity> generos = pelicula.getGeneros();
-            generos.add(genero);
-            pelicula.setGeneros(generos);
-            peliculaRepository.save(pelicula);
+            PeliculaEntity peliculaEntity = peliculaRepository.getById(idPelicula);
+            GeneroEntity generoEntity = generoRepository.getById(idGenero);
 
-        } else if (!generoRepository.existsById(idGenero)) {
-            throw new EntityNotFoundException(ExceptionsMensaje.GENERO_NO_ENCONTRADO);
+            List<GeneroEntity> generos = peliculaEntity.getGeneros();
 
-        } else if (!peliculaRepository.existsById(idPelicula)) {
-            throw new EntityNotFoundException(ExceptionsMensaje.PELICULA_NO_ENCONTRADA);
+            generos.add(generoEntity);
+            peliculaEntity.setGeneros(generos);
+            peliculaRepository.save(peliculaEntity);
 
+        } catch (PeliculaException exception) {
+            throw new PeliculaException(ExceptionMensaje.PELICULA_NO_ENCONTRADA);
+
+        } catch (GeneroException exception) {
+            throw new GeneroException(ExceptionMensaje.GENERO_NO_ENCONTRADO);
         }
+
     }
 
+      
     @Override
     public void removeGeneroDePelicula(String idGenero, String idPelicula) {
 
-        if (generoRepository.existsById(idGenero) && peliculaRepository.existsById(idPelicula)) {
-            PeliculaEntity pelicula = peliculaRepository.getById(idPelicula);
+        try {
+
+            PeliculaEntity peliculaEntity = peliculaRepository.getById(idPelicula);
             GeneroEntity genero = generoRepository.getById(idGenero);
-            List<GeneroEntity> generos = pelicula.getGeneros();
+
+            List<GeneroEntity> generos = peliculaEntity.getGeneros();
+
             generos.remove(genero);
-            pelicula.setGeneros(generos);
-            peliculaRepository.save(pelicula);
+            peliculaEntity.setGeneros(generos);
+            peliculaRepository.save(peliculaEntity);
 
-        } else if (!generoRepository.existsById(idGenero)) {
-            throw new EntityNotFoundException(ExceptionsMensaje.GENERO_NO_ENCONTRADO);
+        } catch (PeliculaException exc) {
+            throw new PeliculaException(ExceptionMensaje.PELICULA_NO_ENCONTRADA);
 
-        } else if (!peliculaRepository.existsById(idPelicula)) {
-            throw new EntityNotFoundException(ExceptionsMensaje.PELICULA_NO_ENCONTRADA);
+        } catch (GeneroException exc) {
+            throw new GeneroException(ExceptionMensaje.GENERO_NO_ENCONTRADO);
         }
+
     }
 }

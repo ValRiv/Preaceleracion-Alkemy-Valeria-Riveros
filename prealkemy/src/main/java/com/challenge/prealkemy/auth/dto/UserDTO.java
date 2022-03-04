@@ -12,9 +12,10 @@ import lombok.Data;
  */
 @Data
 public class UserDTO {
-    @Email(message = "Username must be an email")
-    private String username;
-    @Size(min = 8)
+    @Email(message = "El nombre de usuario debe ser un correo electrónico")
     @NotNull
+    private String username;
+    @NotNull
+    @Size(min = 8)
     private String password;
 }

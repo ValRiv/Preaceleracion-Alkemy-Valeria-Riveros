@@ -1,10 +1,8 @@
-
 package com.challenge.prealkemy.dto;
 
 import java.util.List;
-import lombok.AllArgsConstructor;
+
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
@@ -13,12 +11,13 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
+
 public class PersonajeDTOFilter {
+
     private String nombre;
+
     private Integer edad;
-    private Double peso;
+
     private List<String> peliculas;
     private String order;
 
@@ -30,4 +29,10 @@ public class PersonajeDTOFilter {
         return order.compareToIgnoreCase("DESC") == 0;
     }
 
+    public PersonajeDTOFilter(String nombre, Integer edad, List<String> peliculas, String order) {
+        this.nombre = nombre;
+        this.edad = edad;
+        this.peliculas = peliculas;
+        this.order = order;
+    }
 }
